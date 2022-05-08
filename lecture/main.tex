@@ -1,12 +1,11 @@
 \documentclass[]{article}
 
 \usepackage{hyperref}
-\usepackage{import}
-\usepackage{listings}
 \usepackage{minted}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{fancyhdr}
 \usepackage{geometry}
  \geometry{
  a4paper,
@@ -16,12 +15,17 @@
  bottom=2.5cm
  }
 
-\usepackage[localise]{xepersian}
+ \usepackage[%
+ localise,%
+ fontsize={11,13},%
+]{xepersian}
 \settextfont{Vazirmatn}
 \setlatintextfont{Roboto}
 
 % for listing environments
 \colorlet{LightGray}{Gray!30!}
+
+\renewcommand{\baselinestretch}{1.5}
 
 % for href
 \eqcommand{تارنما}{href}
@@ -116,7 +120,7 @@ conn, addr = s.accept()
   حالا که ارتباط برقرار شده است، امکان انتقال اطلاعات فراهم می‌باشد.
   سرور هر بار به اندازه مشخصی از داده را می‌خواند. در این نمونه کد در هر بار \متن‌سیاه{حداکثر} مقدار ۱۰۲۴ بایت داده خوانده می‌شود.
   در عمل شما زمانی که به طراحی پروتکل مشغول هستید باید روشی برای مشخص کردن هر درخواست داشته باشید، مثلا می‌توانید هر درخواست
-  را با کاراکتر \متن‌ایتالیک{\متن‌لاتین{``\\n''}} خاتمه دهید در این صورت می‌بایست آرایه دریافتی را برای پیدا کردن این کاراکتر جستجو کنید،
+  را با کاراکتر \متن‌ایتالیک{\متن‌لاتین{``\textbackslash n''}} خاتمه دهید در این صورت می‌بایست آرایه دریافتی را برای پیدا کردن این کاراکتر جستجو کنید،
   در صورتی که این کاراکتر در آرایه شما موجود بود باقی آرایه را برای مرحله بعدی ذخیره کنید یا ممکن است که این کاراکتر را پیدا نکنید که
   در این صورت می‌بایست تا خواندن دوباره صبر کنید. در نظر داشته باشید که کتابخانه‌های سطح بالاتری برای ساده کردن این عملیات وجود دارند.
 
@@ -183,6 +187,42 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
   در این صورت سرور شما هرگز بسته نخواهد شد و شما می‌توانید به دفعات به آن متصل شوید.
 
+  \زیرقسمت{افزودن نخ‌ها}
+
+  اگر بخواهیم با استفاده از یک سرور تعداد زیادی کلاینت را به صورت همزمان پشتیبانی کنیم نیاز داریم که از نخ‌ها استفاده کنیم.
+  برای استفاده از نخ‌ها داخل پایتون کتابخانه‌های استاندارد زیادی وجود دارد. یکی از این کتابخانه‌ها که شباهت زیادی به زبان جاوا دارد
+  کتابخانه‌ی \متن‌لاتین{threading} است.
+
+  \begin{latin}
+  \begin{minted}[bgcolor=LightGray]{python}
+import socket
+import threading
+from typing import Tuple
+
+class Client(threading.Thread):
+    def __init__(self, conn: socket.socket, addr: Tuple[str, int]):
+        super().__init__(name=f'client {addr}')
+        self.conn = conn
+
+    def run(self):
+        with self.conn:
+            while True:
+                data = self.conn.recv(1024)
+                if not data:
+                    break
+                self.conn.sendall(data)
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind(("0.0.0.0", 1234))
+    s.listen()
+    while True:
+        conn, addr = s.accept()
+        print(f'connected by {addr}')
+        Client(conn, addr).start()
+  \end{minted}
+  \end{latin}
+
+
   \قسمت{کلاینت Echo}
 
   \begin{latin}
@@ -194,7 +234,7 @@ PORT = 1373        # The port used by the server
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
-    s.sendall('سلام دنیا'.encode())
+    s.sendall('hello world'.encode())
     data = s.recv(1024)
     message = data.decode()
     print(f'received {message!r}')
