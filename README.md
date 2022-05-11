@@ -1,5 +1,7 @@
 # socket.py
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/cng-by-example/socket.py?label=Lecture&logo=github&style=for-the-badge)](https://github.com/cng-by-example/socket.py/releases/latest)
+
 ## Introduction
 
 Introduction to socket programming with python which is used for one or two hands on session in computer networking course at Amirkabir University of Tech.
