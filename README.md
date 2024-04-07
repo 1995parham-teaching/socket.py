@@ -14,4 +14,4 @@ To have more information on Computer Networks course and see some other homework
 
 ## Releases
 
-The built version of the lecture can be accessed from the releases section. Each release belongs to a specific term.
+The built version of the lecture can be accessed from the releases section. Each release belongs to a specific semester.
