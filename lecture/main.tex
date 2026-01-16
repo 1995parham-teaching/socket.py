@@ -3,24 +3,16 @@
 \usepackage{hyperref}
 \usepackage{minted}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{geometry}
- \geometry{
- a4paper,
- left=2.2cm,
- right=2.2cm,
- top=2.5cm,
- bottom=2.5cm
- }
-
- \usepackage[%
- localise,%
- fontsize={11,13},%
-]{xepersian}
-\settextfont{Vazirmatn}
-\setlatintextfont{Roboto}
+\geometry{
+  a4paper,
+  left=2.2cm,
+  right=2.2cm,
+  top=2.5cm,
+  bottom=2.5cm
+}
 
 % for listing environments
 \colorlet{LightGray}{Gray!30!}
@@ -30,7 +22,7 @@
 \fancypagestyle{main}{%
   \fancyhf{}
   \fancyfoot[c]{\thepage}
-  \fancyhead[R]{برنامه‌نویسی سوکت}
+  \fancyhead[R]{Socket Programming}
   \renewcommand{\headrulewidth}{1.2pt}
 }
 
@@ -38,30 +30,26 @@
 
 \setcounter{tocdepth}{1}
 
-% for href
-\eqcommand{تارنما}{href}
-
-\عنوان{برنامه‌نویسی سوکت}
-\نویسنده{پرهام الوانی}
-\تاریخ{پاییز ۱۳۹۸}
+\title{Socket Programming in Python}
+\author{Parham Alvani}
+\date{Fall 2019}
 
 \begin{document}
-  \عنوان‌ساز
-  \فهرست‌مطالب
-  \صفحه‌شکن
+  \maketitle
+  \tableofcontents
+  \newpage
 
-  \قسمت{مقدمه}
-  در این آموزش قصد داریم یک سرور و کلاینت‌ با استفاده از زبان پایتون پیاده‌سازی کنیم.
-  در این برنامه کلاینت‌ پس از متصل شدن به سرور، متنی را به سرور ارسال می‌کند.
-  سرور پس از دریافت متن، آن را دوباره به کلاینت‌ ارسال می‌کند. کلاینت‌ با دریافت‌ دوباره متن، متن دریافت شده را چاپ کرده و اتصال را قطع می‌کند.
-  به چنین ابزارهایی \متن‌لاتین{Echo} می‌گویند که در گذشته از آن‌ها برای صحت‌سنجی ارتباط استفاده می‌شد.
-  در انتها مرور کوتاهی به پروتکل \متن‌لاتین{UDP} خواهیم داشت که برخلاف \متن‌لاتین{UDP} ارتباطی \متن‌لاتین{connection-less} است.
+  \section{Introduction}
+  In this tutorial, we will implement a server and client using the Python programming language.
+  In this program, after connecting to the server, the client sends a text message to it.
+  The server receives the text and sends it back to the client. Upon receiving the text again, the client prints the received message and closes the connection.
+  Such tools are called \textbf{Echo} servers, which were historically used to verify connection integrity.
+  At the end, we will have a brief overview of the \textbf{UDP} protocol, which unlike \textbf{TCP}, provides connectionless communication.
 
-  \قسمت{سرور \متن‌لاتین{Echo}}
+  \section{Echo Server}
 
-  کد سرور به شرح زیر است، هر بخش کد به تفکیک در ادامه توضیح داده می‌شود.
+  The server code is as follows. Each section of the code is explained in detail below.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
@@ -80,63 +68,52 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 break
             conn.sendall(data)
   \end{minted}
-  \end{latin}
 
- در ابتدا یک سوکت‌ ایجاد می‌کنیم. کد زیر برای ایجاد سوکت‌ استفاده می‌شود:
+  First, we create a socket. The following code is used to create a socket:
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   \end{minted}
-  \end{latin}
 
-  ورودی اول تابع \متن‌لاتین{socket} نوع آدرس‌دهی و ورودی دوم نوع انتقال داده در ارتباط است‌.
-  در این مثال با انتخاب \متن‌لاتین{AF\_INET} نوع آدرس‌دهی را از نوع \متن‌لاتین{IPv4} انتخاب می‌کنیم‌.
-  در صورتی که قصد داریم آدرس را به صورت \متن‌لاتین{IP} نوع چهارم یا \متن‌لاتین{hostname} استفاده کنیم
-  باید این نوع از آدرس‌دهی را به عنوان ورودی به تابع بدهیم‌.
-  \متن‌لاتین{SOCK\_STREAM} برای ارتباط بر روی پروتکل \متن‌لاتین{TCP} می‌باشد.
-  در صورتی که قصد داشته باشیم پروتکل لایه انتقال را تغییر دهیم از این ورودی استفاده می‌کنیم.
-  از انواع آدرس‌دهی دیگر می‌توان به \متن‌لاتین{AF\_PACKET}، \متن‌لاتین{AF\_INET6}، \متن‌لاتین{AF\_CAN} و \متن‌لاتین{AF\_BLUETOOTH} اشاره کرد.
+  The first argument to the \texttt{socket} function specifies the address family, and the second specifies the type of data transfer in the connection.
+  In this example, by selecting \texttt{AF\_INET}, we choose IPv4 addressing.
+  If we want to use either IPv4 addresses or hostnames, we must pass this address type to the function.
+  \texttt{SOCK\_STREAM} is used for communication over the TCP protocol.
+  If we want to change the transport layer protocol, we use this argument.
+  Other address families include \texttt{AF\_PACKET}, \texttt{AF\_INET6}, \texttt{AF\_CAN}, and \texttt{AF\_BLUETOOTH}.
 
-  پس از ایجاد سوکت‌ آدرس مربوطه را به آن تخصیص می‌دهیم.
-  در اینجا آدرس داده شده به سوکت‌ آدرسی‌ است که سوکت اطلاعات را از آن دریافت و از طریق آن ارسال می‌کند.
-  آدرس شامل دوبخش \متن‌لاتین{host} و \متن‌لاتین{port} است.
-  \متن‌لاتین{host} یک رشته است که مشخص می‌کند این عمل گوش دادن روی کدام کارت شبکه صورت بگیرد و قسمت \متن‌لاتین{port} مشخص کننده‌ی پورتی است که سرور روی آن گوش می‌دهد.
-  مقدار \متن‌لاتین{host} با توجه به نوع آدرس مشخص شده می‌تواند به صورت \متن‌لاتین{IP} نوع چهارم،  \متن‌لاتین{hostname} یا رشته خالی باشد.
-  در صورتی که رشته خالی یا \متن‌ایتالیک{\متن‌لاتین{``0.0.0.0''}} به عنوان \متن‌لاتین{host} تنظیم شود،
-  سرور از تمام کارت های شبکه خود برای ارتباط گیری استفاده می‌کند.
-  در نهایت با مشخص شدن این اطلاعات می‌خواهیم که سوکت در حالت قبول تقاضا قرار بگیرد.
+  After creating the socket, we assign an address to it.
+  The address given to the socket is the address from which the socket receives and sends data.
+  The address consists of two parts: \texttt{host} and \texttt{port}.
+  The \texttt{host} is a string that specifies which network interface to listen on, and the \texttt{port} specifies the port number the server listens on.
+  The \texttt{host} value, depending on the address type, can be an IPv4 address, a hostname, or an empty string.
+  If an empty string or \texttt{"0.0.0.0"} is set as the host, the server will use all available network interfaces for communication.
+  Finally, with this information specified, we want the socket to enter the listening state to accept requests.
 
-  پارامتر ورودی تابع \متن‌لاتین{listen} که \متن‌لاتین{backlog} نام دارد تعداد ارتباط‌های پذیرفته نشده‌ای را مشخص می‌کند که سیستم عامل
-  پیش از نپذیرفتن ارتباط‌های جدید، خواهد پذیرفت. این تعداد به برنامه شما اجازه می‌دهد تا پذیرفتن درخواست‌ها را به دلایل مختلف به تعویق بیاندازد.
-  از نسخه‌ی ۳.۵ پایتون استفاده از این پارامتر دلخواه است و در صورتی که مقداری برای آن در نظر نگیرید از یک مقدار پیشفرض منطقی استفاده خواهد شد.
+  The input parameter to the \texttt{listen} function, called \texttt{backlog}, specifies the number of unaccepted connections that the operating system will allow before refusing new connections.
+  This number allows your application to delay accepting requests for various reasons.
+  Since Python 3.5, this parameter is optional, and if not specified, a reasonable default value is used.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 s.bind((HOST, PORT))
 s.listen(1)
   \end{minted}
-  \end{latin}
 
-  پس از مشخص شدن اطلاعات آدرس، سوکت باید منتظر برقرای ارتباط از سوی کلاینت بماند.
-  برنامه پس از برخورد با کد زیر در این همان جا متوقف می‌شود و منتظر دریافت درخواست ایجاد یک ارتباط توسط کلاینت می‌ماند.
-  پس از دریافت درخواست برقراری ارتباط، سرور با فراخوانی کد زیر درخواست را تایید می‌کند.
-  پس از تایید درخواست، آدرس درخواست دهنده و ارتباط ایجاد شده در دو متغیر \متن‌لاتین{addr} و \متن‌لاتین{conn} ذخیره می‌گردد.
+  After specifying the address information, the socket must wait for a connection from the client.
+  When the program reaches the following code, it stops and waits to receive a connection request from a client.
+  After receiving a connection request, the server confirms the request by calling the following code.
+  After confirming the request, the requester's address and the established connection are stored in the \texttt{addr} and \texttt{conn} variables.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 conn, addr = s.accept()
   \end{minted}
-  \end{latin}
 
-  حالا که ارتباط برقرار شده است، امکان انتقال اطلاعات فراهم می‌باشد.
-  سرور هر بار به اندازه مشخصی از داده را می‌خواند. در این نمونه کد در هر بار \متن‌سیاه{حداکثر} مقدار ۱۰۲۴ بایت داده خوانده می‌شود.
-  در عمل شما زمانی که به طراحی پروتکل مشغول هستید باید روشی برای مشخص کردن هر درخواست داشته باشید، مثلا می‌توانید هر درخواست
-  را با کاراکتر \متن‌ایتالیک{\متن‌لاتین{``\textbackslash n''}} خاتمه دهید در این صورت می‌بایست آرایه دریافتی را برای پیدا کردن این کاراکتر جستجو کنید،
-  در صورتی که این کاراکتر در آرایه شما موجود بود باقی آرایه را برای مرحله بعدی ذخیره کنید یا ممکن است که این کاراکتر را پیدا نکنید که
-  در این صورت می‌بایست تا خواندن دوباره صبر کنید. در نظر داشته باشید که کتابخانه‌های سطح بالاتری برای ساده کردن این عملیات وجود دارند.
+  Now that the connection is established, data transfer is possible.
+  The server reads a specified amount of data each time. In this example, a \textbf{maximum} of 1024 bytes of data is read each time.
+  In practice, when designing a protocol, you need a method to identify each request. For example, you can terminate each request with the \texttt{'\textbackslash n'} character.
+  In this case, you must search the received array for this character. If the character is found, save the rest of the array for the next iteration.
+  If the character is not found, you must wait for the next read. Keep in mind that higher-level libraries exist to simplify these operations.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 with conn:
     print('Connected by', addr)
@@ -145,37 +122,31 @@ with conn:
         if not data:
             break
   \end{minted}
-  \end{latin}
 
-  در اینجا ما از پروتکل خاصی پیروی نمی‌کنیم بنابراین پس از خواندن داده آن را دوباره به کلاینت باز می‌گردانیم.
+  Here, we don't follow any specific protocol, so after reading the data, we simply send it back to the client.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 conn.sendall(data)
   \end{minted}
-  \end{latin}
 
-  \قسمت{کلاینت \متن‌لاتین{Echo} به وسیله‌ی \متن‌لاتین{Telnet}}
+  \section{Echo Client Using Telnet}
 
-  پس از ایجاد سرور نیاز است که یک کلاینت نیز ایجاد کنیم تا بتوانیم با سرور ارتباط برقرار کنیم.
-  یکی از راه‌های ساده تست سرور پیش از پیاده‌سازی کلاینت استفاده از دستور \متن‌لاتین{telnet} در سیستم عامل لینوکس می‌باشد.
-  (این دستور در سایر سیستم‌عامل‌ها نیز وجود دارد.)
-  ساختار ساده شده این دستور به شکل زیر است:
+  After creating the server, we need to create a client to communicate with it.
+  One simple way to test the server before implementing a client is to use the \texttt{telnet} command in Linux.
+  (This command is also available on other operating systems.)
+  The simplified structure of this command is as follows:
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{bash}
 telnet [ip] [port]
   \end{minted}
-  \end{latin}
 
-  دستور \متن‌لاتین{telnet} یک ارتباط \متن‌لاتین{TCP} با آدرس \متن‌لاتین{IP} و پورت داده شده برقرار می‌کند.
-  شما می‌توانید هر آنچه که می‌خواهید در این ارتباط نوشته و با فشردن دکمه‌ی \متن‌لاتین{enter} آن را به مقصدتان ارسال کنید.
-  در ادامه اطلاعات دریافتی از سرور نیز برای شما به نمایش درخواهند آمد.
+  The \texttt{telnet} command establishes a TCP connection with the given IP address and port.
+  You can write whatever you want in this connection and send it to your destination by pressing Enter.
+  The data received from the server will also be displayed.
 
-  دقت داشته باشید که سرور شما تنها یکبار عملیات \متن‌لاتین{accept} را انجام می‌دهد بنابراین بعد از بسته شدن ارتباط اولین کلاینت شما
-  سرور شما به اتمام می‌رسد. برای جلوگیری از این مورد فراخوانی تابع \متن‌لاتین{accept} عموما در یک حلقه بی‌نهایت قرار می‌گیرد.
+  Note that your server only performs the \texttt{accept} operation once, so after the first client's connection closes, your server terminates.
+  To prevent this, the \texttt{accept} function call is usually placed in an infinite loop.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
@@ -195,17 +166,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                   break
               conn.sendall(data)
   \end{minted}
-  \end{latin}
 
-  در این صورت سرور شما هرگز بسته نخواهد شد و شما می‌توانید به دفعات به آن متصل شوید.
+  In this case, your server will never close, and you can connect to it multiple times.
 
-  \زیرقسمت{افزودن نخ‌ها}
+  \subsection{Adding Threads}
 
-  اگر بخواهیم با استفاده از یک سرور تعداد زیادی کلاینت را به صورت همزمان پشتیبانی کنیم نیاز داریم که از نخ‌ها استفاده کنیم.
-  برای استفاده از نخ‌ها داخل پایتون کتابخانه‌های استاندارد زیادی وجود دارد. یکی از این کتابخانه‌ها که شباهت زیادی به زبان جاوا دارد
-  کتابخانه‌ی \متن‌لاتین{threading} است.
+  If we want to support many clients simultaneously using a single server, we need to use threads.
+  Python has many standard libraries for using threads. One library that is very similar to Java is the \texttt{threading} library.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 import threading
@@ -232,18 +200,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         print(f'connected by {addr}')
         Client(conn, addr).start()
   \end{minted}
-  \end{latin}
 
-  برای استفاده از این کتابخانه یک راه تعریف یک کلاس با ارث‌بری از \متن‌لاتین{Thread}، ساختن یک نمونه از آن و اجرای یک نخ جدید با متد \متن‌لاتین{run} است.
+  To use this library, one approach is to define a class that inherits from \texttt{Thread}, create an instance of it, and start a new thread with the \texttt{start} method, which runs the \texttt{run} method.
 
-  \قسمت{کلاینت Echo}
+  \section{Echo Client}
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
-PORT = 1373        # The port used by the server
+PORT = 1373         # The port used by the server
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
@@ -252,31 +218,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     message = data.decode()
     print(f'received {message!r}')
   \end{minted}
-  \end{latin}
 
-مانند سرور در این بخش نیز نیاز است ابتدا یک سوکت با ویژگی های یکسان با سوکت ساخته شده در سرور بسازیم:
+  Like the server, we first need to create a socket with the same properties as the socket created on the server:
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   \end{minted}
-  \end{latin}
 
-  پس از ایجاد سوکت، آدرس سرور را به سوکت داده تا درخواست ارتباط به سرور ارسال گردد.
-  کد در این خط باقی می ماند تا زمانی که درخواست ارتباط توسط سرور قبول، رد و یا منقضی گردد.
-  در صورت قبول نشدن درخواست برنامه خطا داده و متوقف می‌گردد.
-  حتما در نظر داشته باشید که در هنگام استفاده از این سوکت در نرم افزارها، خطاهای بوجود آمده به علت عدم برقراری ارتباط به برنامه اصلی شما صدمه ای نزند.
-  در صورت تایید ارتباط، برنامه ادامه می‌یابد.
+  After creating the socket, we give it the server's address to send a connection request.
+  The code blocks at this line until the connection request is accepted, rejected, or times out.
+  If the request is not accepted, the program raises an error and stops.
+  Make sure that when using this socket in applications, errors due to connection failures do not crash your main program.
+  If the connection is confirmed, the program continues.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 s.connect((HOST, PORT))
   \end{minted}
-  \end{latin}
 
-برای رسیدگی به خطاها در نظر داشته باشید که می‌توان از ساختار \متن‌لاتین{Try/Except} در پایتون استفاده کرد:
+  To handle errors, you can use Python's \texttt{try/except} structure:
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 try:
     with open('file.log') as file:
@@ -284,9 +244,7 @@ try:
 except:
     print('Could not open file.log')
   \end{minted}
-  \end{latin}
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 try:
     with open('file.log') as file:
@@ -294,38 +252,30 @@ try:
 except FileNotFoundError as fnf_error:
     print(fnf_error)
   \end{minted}
-  \end{latin}
 
-  کد زیر رشته \متن‌لاتین{Hello World} را به سرور ارسال می‌کند. در نظر داشته باشید که استفاده از تابع \متن‌لاتین{encode}
-  به شما اجازه می‌دهد که رشته‌های \متن‌لاتین{UTF-8} را به رشته‌ای از بایت‌ها تبدیل کرده و ارسال کنید.
+  The following code sends the string "Hello World" to the server. Note that using the \texttt{encode} function allows you to convert UTF-8 strings to byte strings for transmission.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 s.sendall('Hello, world'.encode())
   \end{minted}
-  \end{latin}
 
-  پس از ارسال داده مانند قسمت سرور منتظر دریافت داده‌ها می‌مانیم. دقت داشته باشید که در عمل یکی از طرفیت می‌بایست ارتباط را خاتمه دهد.
-  مثلا می‌توانیم در اینجا در سمت کلاینت پس از مطمئن شدم از دریافت صحیح رشته ارتباط را ببنیدم یا مثلا کاربر با دستور \متن‌لاتین{Ctrl + C}
-  کلاینت و ارتباط را ببندد.
+  After sending the data, like the server part, we wait to receive data. Note that in practice, one of the parties must terminate the connection.
+  For example, we can close the connection on the client side after ensuring correct receipt of the string, or the user can close the client and connection with \texttt{Ctrl + C}.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 while True:
   data = conn.recv(1024)
   if not data:
       break
   \end{minted}
-  \end{latin}
 
-  \قسمت{ارتباط مبتنی بر \متن‌لاتین{UDP}}
-  زبان پایتون این امکان را می‌دهد که بتوانید با استفاده از پروتکل \متن‌لاتین{UDP} به پراکنده کردن داده بپردازید.
-  در مثال پیشرو یک کلاینت \متن‌لاتین{UDP} برای ارسال پیام‌های همه‌پخشی ایجاد شده است.
-  این کلاینت به آدرس \متن‌لاتین{0.0.0.0} و پورت \متن‌لاتین{44444} بسته شده و از آن برای دریافت بسته‌های \متن‌لاتین{UDP} استفاده می‌کند.
-  این کلاینت بسته‌های را به آدرس همه‌پخشی و پورت \متن‌لاتین{37020} ارسال می‌کند.
-  در نظر داشته باشید که در هردو این کلاینت‌ها ما تنظیمات مربوط به استفاده از وضعیت همه‌پخشی را انجام داده‌ایم.
+  \section{UDP-Based Communication}
+  Python allows you to broadcast data using the UDP protocol.
+  In the following example, a UDP client is created to send broadcast messages.
+  This client binds to address \texttt{0.0.0.0} and port \texttt{44444} and uses it to receive UDP packets.
+  This client sends packets to the broadcast address on port \texttt{37020}.
+  Note that in both clients, we have configured the broadcast mode settings.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 import time
@@ -340,13 +290,10 @@ while True:
     print("message sent!")
     time.sleep(1)
   \end{minted}
-  \end{latin}
 
-  کلاینت دوم در ادامه به آدرس \متن‌لاتین{0.0.0.0} و پورت \متن‌لاتین{37020} بسته شده و داده‌ها را دریافت می‌کند.
-  در اینجا هم مثل ارتباط \متن‌لاتین{TCP} می‌بایست حداکثر داده‌ی دریافتی را مشخص کنیم ولی در نظر داشته باشید که اگر بسته‌ی دریافتی
-  داده‌ی بیشتری از مقدار مشخص شده‌ی شما داشته باشد این داده‌ی اضافه \متن‌سیاه{از بین خواهد رفت}.
+  The second client binds to address \texttt{0.0.0.0} and port \texttt{37020} and receives data.
+  Here, like TCP communication, we must specify the maximum received data, but keep in mind that if the received packet contains more data than specified, this extra data \textbf{will be lost}.
 
-  \begin{latin}
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
@@ -355,19 +302,16 @@ client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 client.bind(("", 37020))
 while True:
     data, addr = client.recvfrom(1024)
-    print("received message:",data,addr)
+    print("received message:", data, addr)
   \end{minted}
-  \end{latin}
 
-  تفاوت اصلی میان ارتباط \متن‌لاتین{TCP} و \متن‌لاتین{UDP} در چگونگی ساخت سوکت و توابع ارسال و دریافت اطلاعات است.
-  البته از شبکه به خاطر دارید که در ارتباط \متن‌لاتین{UDP} یک اتصال شکل نمی‌گیرد
-  و داده‌ها در قالب پیام به دست برنامه‌ی کاربردی می‌رسند.
-  این پیام‌ها می‌توانند از ترتیب اولیه خود خارج شده باشند یا اینکه دچار خطا باشند.
+  The main difference between TCP and UDP communication is in how the socket is created and the functions for sending and receiving data.
+  Of course, from your networking course, you remember that in UDP communication, no connection is formed, and data reaches the application in the form of messages.
+  These messages may be out of order or contain errors.
 
-  \فضای‌و*{\پر}
-  \شروع{وسط‌چین}
-  نسخه‌ی اولیه این گزارش در بهار ۱۳۹۸ توسط سپهر صبور حاضر شده است. نسخه‌ی حاضر تنها شامل بهبودهایی اندک نسبت به نسخه‌ی اصلی می‌باشد.
-  این سند برپایه بسته \متن‌لاتین{\زی‌پرشین} گونه \متن‌لاتین{\گونه‌زی‌پرشین} توسعه پیدا کرده است.
-  \پایان{وسط‌چین}
+  \vfill
+  \begin{center}
+  The original version of this document was prepared in Spring 2019 by Sepehr Sabour. The current version contains only minor improvements to the original.
+  \end{center}
 
 \end{document}
