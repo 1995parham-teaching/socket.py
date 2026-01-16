@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{geometry}
+\usepackage{booktabs}
 \geometry{
   a4paper,
   left=2.2cm,
@@ -28,7 +29,7 @@
 
 \pagestyle{main}
 
-\setcounter{tocdepth}{1}
+\setcounter{tocdepth}{2}
 
 \title{Socket Programming in Python}
 \author{Parham Alvani}
@@ -46,6 +47,127 @@
   Such tools are called \textbf{Echo} servers, which were historically used to verify connection integrity.
   At the end, we will have a brief overview of the \textbf{UDP} protocol, which unlike \textbf{TCP}, provides connectionless communication.
 
+  \section{TCP vs UDP: Understanding the Protocols}
+  Before diving into the code, it's important to understand the fundamental differences between TCP and UDP.
+
+  \subsection{TCP (Transmission Control Protocol)}
+  TCP is a \textbf{connection-oriented} protocol that provides:
+  \begin{itemize}
+    \item \textbf{Reliable delivery}: Data is guaranteed to arrive in order and without errors
+    \item \textbf{Flow control}: Prevents sender from overwhelming receiver
+    \item \textbf{Congestion control}: Adapts to network conditions
+    \item \textbf{Three-way handshake}: Connection establishment (SYN, SYN-ACK, ACK)
+  \end{itemize}
+
+  \textbf{Use cases}: Web browsing (HTTP/HTTPS), email (SMTP), file transfer (FTP), SSH.
+
+  \subsection{UDP (User Datagram Protocol)}
+  UDP is a \textbf{connectionless} protocol that provides:
+  \begin{itemize}
+    \item \textbf{No guaranteed delivery}: Packets may be lost, duplicated, or arrive out of order
+    \item \textbf{No connection setup}: Lower latency, messages sent immediately
+    \item \textbf{Message-based}: Data arrives as discrete datagrams, not a stream
+    \item \textbf{Lightweight}: Less overhead than TCP
+  \end{itemize}
+
+  \textbf{Use cases}: Video streaming, online gaming, DNS queries, VoIP, broadcast/multicast.
+
+  \subsection{Comparison Table}
+
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Feature} & \textbf{TCP} & \textbf{UDP} \\
+    \midrule
+    Connection & Connection-oriented & Connectionless \\
+    Reliability & Guaranteed delivery & Best-effort delivery \\
+    Ordering & Ordered & No ordering guarantee \\
+    Speed & Slower (overhead) & Faster (minimal overhead) \\
+    Data format & Byte stream & Datagrams \\
+    Socket type & \texttt{SOCK\_STREAM} & \texttt{SOCK\_DGRAM} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \section{Socket Lifecycle}
+  Understanding the socket lifecycle is crucial for proper network programming. Here's the typical flow:
+
+  \subsection{Server Lifecycle}
+  \begin{enumerate}
+    \item \textbf{Create}: Create a socket with \texttt{socket.socket()}
+    \item \textbf{Bind}: Assign an address with \texttt{s.bind((host, port))}
+    \item \textbf{Listen}: Start listening for connections with \texttt{s.listen()}
+    \item \textbf{Accept}: Accept incoming connections with \texttt{s.accept()}
+    \item \textbf{Communicate}: Send/receive data with \texttt{send()}/\texttt{recv()}
+    \item \textbf{Close}: Clean up with \texttt{s.close()} or use context manager
+  \end{enumerate}
+
+  \subsection{Client Lifecycle}
+  \begin{enumerate}
+    \item \textbf{Create}: Create a socket with \texttt{socket.socket()}
+    \item \textbf{Connect}: Connect to server with \texttt{s.connect((host, port))}
+    \item \textbf{Communicate}: Send/receive data with \texttt{send()}/\texttt{recv()}
+    \item \textbf{Close}: Clean up with \texttt{s.close()} or use context manager
+  \end{enumerate}
+
+  \section{Important Concepts}
+
+  \subsection{Context Managers and Resource Cleanup}
+  Python's \texttt{with} statement ensures proper resource cleanup. When working with sockets, this is critical because:
+  \begin{itemize}
+    \item Sockets are limited system resources
+    \item Unclosed sockets can cause "Address already in use" errors
+    \item The \texttt{with} statement guarantees \texttt{close()} is called, even if exceptions occur
+  \end{itemize}
+
+  \begin{minted}[bgcolor=LightGray]{python}
+# Good: Using context manager
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    # Socket is automatically closed when leaving the block
+
+# Without context manager (not recommended)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    s.connect((HOST, PORT))
+finally:
+    s.close()  # Must remember to close!
+  \end{minted}
+
+  \subsection{String Encoding and Decoding}
+  Sockets transmit \textbf{bytes}, not strings. You must convert between them:
+
+  \begin{minted}[bgcolor=LightGray]{python}
+# String to bytes (before sending)
+message = "Hello, World!"
+data = message.encode("utf-8")  # Returns b'Hello, World!'
+
+# Bytes to string (after receiving)
+received = b'Hello, World!'
+text = received.decode("utf-8")  # Returns 'Hello, World!'
+  \end{minted}
+
+  \textbf{Key points}:
+  \begin{itemize}
+    \item UTF-8 is the default encoding (handles international characters)
+    \item \texttt{encode()} converts \texttt{str} to \texttt{bytes}
+    \item \texttt{decode()} converts \texttt{bytes} to \texttt{str}
+    \item Binary data (images, files) doesn't need encoding---it's already bytes
+  \end{itemize}
+
+  \subsection{Buffer Sizes}
+  When receiving data, you specify a \textbf{maximum buffer size}:
+
+  \begin{minted}[bgcolor=LightGray]{python}
+data = conn.recv(1024)  # Receive up to 1024 bytes
+  \end{minted}
+
+  \textbf{Why 1024 bytes?} It's a common convention---a power of 2 that balances memory usage and efficiency.
+
+  \textbf{TCP behavior}: Data arrives as a stream. If more than 1024 bytes were sent, you'll receive the first 1024 and must call \texttt{recv()} again for the rest. Data is never lost, but you must handle partial reads.
+
+  \textbf{UDP behavior}: Data arrives as discrete datagrams. If a datagram exceeds your buffer size, the excess data is \textbf{permanently lost}. Choose buffer size carefully!
+
   \section{Echo Server}
 
   The server code is as follows. Each section of the code is explained in detail below.
@@ -53,17 +175,19 @@
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
+HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
 PORT = 1373         # Port to listen on (non-privileged ports are > 1023)
+BUFFER_SIZE = 1024  # Maximum bytes to receive at once
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))
     s.listen()
     conn, addr = s.accept()
     with conn:
-        print('Connected by', addr)
+        print(f"Connected by {addr}")
         while True:
-            data = conn.recv(1024)
+            data = conn.recv(BUFFER_SIZE)
             if not data:
                 break
             conn.sendall(data)
@@ -82,6 +206,12 @@ socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   If we want to change the transport layer protocol, we use this argument.
   Other address families include \texttt{AF\_PACKET}, \texttt{AF\_INET6}, \texttt{AF\_CAN}, and \texttt{AF\_BLUETOOTH}.
 
+  The \texttt{SO\_REUSEADDR} option allows reusing the address immediately after the server closes, preventing "Address already in use" errors during development:
+
+  \begin{minted}[bgcolor=LightGray]{python}
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  \end{minted}
+
   After creating the socket, we assign an address to it.
   The address given to the socket is the address from which the socket receives and sends data.
   The address consists of two parts: \texttt{host} and \texttt{port}.
@@ -96,7 +226,7 @@ socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
   \begin{minted}[bgcolor=LightGray]{python}
 s.bind((HOST, PORT))
-s.listen(1)
+s.listen()
   \end{minted}
 
   After specifying the address information, the socket must wait for a connection from the client.
@@ -116,9 +246,9 @@ conn, addr = s.accept()
 
   \begin{minted}[bgcolor=LightGray]{python}
 with conn:
-    print('Connected by', addr)
+    print(f"Connected by {addr}")
     while True:
-        data = conn.recv(1024)
+        data = conn.recv(BUFFER_SIZE)
         if not data:
             break
   \end{minted}
@@ -150,21 +280,23 @@ telnet [ip] [port]
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
+HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
 PORT = 1373         # Port to listen on (non-privileged ports are > 1023)
+BUFFER_SIZE = 1024  # Maximum bytes to receive at once
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((HOST, PORT))
     s.listen()
     while True:
-      conn, addr = s.accept()
-      with conn:
-          print('Connected by', addr)
-          while True:
-              data = conn.recv(1024)
-              if not data:
-                  break
-              conn.sendall(data)
+        conn, addr = s.accept()
+        with conn:
+            print(f"Connected by {addr}")
+            while True:
+                data = conn.recv(BUFFER_SIZE)
+                if not data:
+                    break
+                conn.sendall(data)
   \end{minted}
 
   In this case, your server will never close, and you can connect to it multiple times.
@@ -179,26 +311,39 @@ import socket
 import threading
 from typing import Tuple
 
-class Client(threading.Thread):
-    def __init__(self, conn: socket.socket, addr: Tuple[str, int]):
-        super().__init__(name=f'client {addr}')
-        self.conn = conn
+# Configuration constants
+HOST: str = "0.0.0.0"  # Listen on all interfaces
+PORT: int = 1234       # Port to listen on
+BUFFER_SIZE: int = 1024
 
-    def run(self):
+class Handler(threading.Thread):
+    """Thread handler for individual client connections."""
+
+    def __init__(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
+        self.conn = conn
+        self.addr = addr
+        super().__init__(name=f"client-{addr[0]}:{addr[1]}")
+
+    def run(self) -> None:
+        """Handle client communication in a separate thread."""
         with self.conn:
+            print(f"Connected by {self.addr}")
             while True:
-                data = self.conn.recv(1024)
+                data = self.conn.recv(BUFFER_SIZE)
                 if not data:
                     break
                 self.conn.sendall(data)
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind(("0.0.0.0", 1234))
-    s.listen()
-    while True:
-        conn, addr = s.accept()
-        print(f'connected by {addr}')
-        Client(conn, addr).start()
+
+if __name__ == "__main__":
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((HOST, PORT))
+        s.listen()
+        print(f"Server listening on {HOST}:{PORT}")
+        while True:
+            conn, addr = s.accept()
+            Handler(conn, addr).start()
   \end{minted}
 
   To use this library, one approach is to define a class that inherits from \texttt{Thread}, create an instance of it, and start a new thread with the \texttt{start} method, which runs the \texttt{run} method.
@@ -208,15 +353,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
-HOST = '127.0.0.1'  # The server's hostname or IP address
+HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 1373         # The port used by the server
+BUFFER_SIZE = 1024  # Maximum bytes to receive at once
+MESSAGE = "Hello, World!"
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
-    s.sendall('hello world'.encode())
-    data = s.recv(1024)
-    message = data.decode()
-    print(f'received {message!r}')
+    s.sendall(MESSAGE.encode("utf-8"))
+    data = s.recv(BUFFER_SIZE)
+    response = data.decode("utf-8")
+    print(f"Received: {response}")
   \end{minted}
 
   Like the server, we first need to create a socket with the same properties as the socket created on the server:
@@ -235,28 +382,41 @@ socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
   \end{minted}
 
-  To handle errors, you can use Python's \texttt{try/except} structure:
+  \subsection{Error Handling}
+
+  To handle errors, you can use Python's \texttt{try/except} structure. For socket programming, you should handle specific exceptions:
 
   \begin{minted}[bgcolor=LightGray]{python}
+import socket
+
+HOST = "127.0.0.1"
+PORT = 1234
+
 try:
-    with open('file.log') as file:
-        read_data = file.read()
-except:
-    print('Could not open file.log')
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(b"Hello")
+        data = s.recv(1024)
+except ConnectionRefusedError:
+    print(f"Connection refused - is server running on {HOST}:{PORT}?")
+except socket.timeout:
+    print("Connection timed out")
+except OSError as e:
+    print(f"Socket error: {e}")
   \end{minted}
 
-  \begin{minted}[bgcolor=LightGray]{python}
-try:
-    with open('file.log') as file:
-        read_data = file.read()
-except FileNotFoundError as fnf_error:
-    print(fnf_error)
-  \end{minted}
+  \textbf{Common socket exceptions}:
+  \begin{itemize}
+    \item \texttt{ConnectionRefusedError}: Server is not listening on the specified address
+    \item \texttt{socket.timeout}: Connection or operation timed out
+    \item \texttt{ConnectionResetError}: Server closed the connection unexpectedly
+    \item \texttt{OSError}: General socket errors (e.g., "Address already in use")
+  \end{itemize}
 
   The following code sends the string "Hello World" to the server. Note that using the \texttt{encode} function allows you to convert UTF-8 strings to byte strings for transmission.
 
   \begin{minted}[bgcolor=LightGray]{python}
-s.sendall('Hello, world'.encode())
+s.sendall(MESSAGE.encode("utf-8"))
   \end{minted}
 
   After sending the data, like the server part, we wait to receive data. Note that in practice, one of the parties must terminate the connection.
@@ -264,9 +424,9 @@ s.sendall('Hello, world'.encode())
 
   \begin{minted}[bgcolor=LightGray]{python}
 while True:
-  data = conn.recv(1024)
-  if not data:
-      break
+    data = conn.recv(BUFFER_SIZE)
+    if not data:
+        break
   \end{minted}
 
   \section{UDP-Based Communication}
@@ -280,15 +440,23 @@ while True:
 import socket
 import time
 
-server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-server.settimeout(0.2)
-server.bind(("", 44444))
-message = b"your very important message"
-while True:
-    server.sendto(message, ('255.255.255.255', 37020))
-    print("message sent!")
-    time.sleep(1)
+# Configuration constants
+BIND_HOST = ""           # Bind to all interfaces
+BIND_PORT = 44444        # Local port to bind
+BROADCAST_ADDR = "255.255.255.255"
+TARGET_PORT = 37020
+MESSAGE = b"your very important message"
+SEND_INTERVAL = 1.0
+
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.settimeout(0.2)
+    s.bind((BIND_HOST, BIND_PORT))
+
+    while True:
+        s.sendto(MESSAGE, (BROADCAST_ADDR, TARGET_PORT))
+        print(f"Sent: {MESSAGE!r}")
+        time.sleep(SEND_INTERVAL)
   \end{minted}
 
   The second client binds to address \texttt{0.0.0.0} and port \texttt{37020} and receives data.
@@ -297,12 +465,17 @@ while True:
   \begin{minted}[bgcolor=LightGray]{python}
 import socket
 
-client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-client.bind(("", 37020))
-while True:
-    data, addr = client.recvfrom(1024)
-    print("received message:", data, addr)
+BIND_HOST = ""      # Bind to all interfaces
+BIND_PORT = 37020   # Port to listen on
+BUFFER_SIZE = 1024  # Maximum bytes to receive (excess is lost!)
+
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.bind((BIND_HOST, BIND_PORT))
+
+    while True:
+        data, addr = s.recvfrom(BUFFER_SIZE)
+        print(f"Received from {addr}: {data!r}")
   \end{minted}
 
   The main difference between TCP and UDP communication is in how the socket is created and the functions for sending and receiving data.
