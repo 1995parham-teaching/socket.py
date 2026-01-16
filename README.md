@@ -12,7 +12,7 @@ The chosen language is Python, which is also used in the textbook [Computer Netw
 
 ## Prerequisites
 
-- Python 3.6 or higher
+- Python 3.8 or higher
 - Basic understanding of networking concepts (IP addresses, ports, TCP/UDP)
 
 ## Directory Structure
