@@ -8,7 +8,7 @@ Introduction to socket programming with Python, used for hands-on sessions in th
 
 This repository provides practical examples of network communication using Python's `socket` module. It covers both **TCP** (connection-oriented) and **UDP** (connectionless) protocols, helping students understand low-level network programming without spending too much time on setup.
 
-The chosen language is Python, which is also used in the textbook [Computer Networking: A Top-Down Approach](https://gaia.cs.umass.edu/kurose_ross/index.php) by Jim Kurose and Keith Ross.
+The chosen language is Python, which is also used in the textbook [Computer Networking: A Top-Down Approach](https://www.pearson.com/en-us/subject-catalog/p/computer-networking-a-top-down-approach/P200000013385) by Jim Kurose and Keith Ross.
 
 ## Prerequisites
 
@@ -106,7 +106,7 @@ The sender broadcasts messages every second, which are received by the receiver.
 
 - [Python socket documentation](https://docs.python.org/3/library/socket.html)
 - [Computer Networks course materials](https://github.com/1995parham-teaching/computer-networks)
-- [Computer Networking: A Top-Down Approach](https://gaia.cs.umass.edu/kurose_ross/index.php)
+- [Computer Networking: A Top-Down Approach](https://www.pearson.com/en-us/subject-catalog/p/computer-networking-a-top-down-approach/P200000013385)
 
 ## Releases
 
