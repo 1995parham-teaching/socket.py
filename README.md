@@ -1,6 +1,6 @@
 # socket.py
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/cng-by-example/socket.py?label=Lecture&logo=github&style=for-the-badge)](https://github.com/cng-by-example/socket.py/releases/latest)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/cng-by-example/socket.py?label=Lecture&logo=github&style=for-the-badge)](https://github.com/1995parham-teaching/socket.py/releases/latest)
 
 ## Introduction
 
